@@ -51,9 +51,9 @@ jobs:
           command: cat issues.json
 
       - persist_to_workspace:
-          root: /home/circleci
+          root: .
           paths:
-            - issues.json
+            - /home/circleci/issues.json
 
 
   # Stage 3: Upload issues to Google Cloud Storage
