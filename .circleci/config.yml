@@ -44,16 +44,17 @@ jobs:
           name: Fetch issues from SonarCloud API
           command: |
             curl -u $SONARQUBE_TOKEN: "https://sonarcloud.io/api/issues/search?componentKeys=$PROJECT_KEY&ps=500" \
-            -o issues.json
+            -o .circleci/issues.json
 
       - run:
           name: Display fetched issues
           command: cat issues.json
 
       - persist_to_workspace:
-          root: .
+          root: ~/
           paths:
             - /home/circleci/issues.json
+            - project/.circleci/issues.json
 
 
   # Stage 3: Upload issues to Google Cloud Storage
@@ -61,7 +62,7 @@ jobs:
     executor: fetch_upload_executor
     steps:
       - attach_workspace:
-          at: /home/circleci
+          at: ~/
 
       - run:
           name: Install Google Cloud SDK
