@@ -56,11 +56,44 @@ jobs:
             - issues.json
 
 
+  # Stage 3: Upload issues to Google Cloud Storage
+  upload_to_gcs:
+    executor: fetch_upload_executor
+    steps:
+      - attach_workspace:
+          at: /workspace
+
+      - run:
+          name: Install Google Cloud SDK
+          command: |
+            curl -sSL https://sdk.cloud.google.com | bash
+            source $HOME/google-cloud-sdk/path.bash.inc
+            gcloud components install gsutil
+
+      - run:
+          name: Authenticate with Google Cloud
+          command: |
+            echo $GCP_SERVICE_ACCOUNT_KEY | base64 --decode > /tmp/gcloud-service-key.json
+            gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
+            gcloud config set project $GCP_PROJECT_ID
+
+      - run:
+          name: Upload issues file to GCS
+          command: |
+            gsutil cp /workspace/issues.json gs://$GCS_BUCKET_NAME/sonarqube-issues/$(date +'%Y-%m-%d')-issues.json
+            echo "Issues file uploaded to GCS"
+
+
 workflows:
   main:
     jobs:
       - build:
           context: SonarCloud
+          
       - fetch_issues:
           context: SonarCloud
           requires: [build]
+
+      - upload_to_gcs:
+          context: SonarCloud
+          requires: [fetch_issues]
