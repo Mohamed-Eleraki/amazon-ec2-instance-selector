@@ -27,7 +27,10 @@ jobs:
           command: echo 'Hello SonarQube!'
       - sonarcloud/scan:
           # Using SonarCloud orb for analysis
-          token: $SONARQUBE_TOKEN
+          # token: $SONARQUBE_TOKEN
+
+          project_key: $PROJECT_KEY
+          organization: $SONARQUBE_ORG
 
   # Stage 2: Fetch issues from SonarCloud and save to file
   fetch_issues:
