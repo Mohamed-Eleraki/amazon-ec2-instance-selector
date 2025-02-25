@@ -51,9 +51,9 @@ jobs:
           command: cat issues.json
 
       - persist_to_workspace:
-          root: ~/
+          root: /home/circleci
           paths:
-            - /home/circleci/issues.json
+            - issues.json
 
 
   # Stage 3: Upload issues to Google Cloud Storage
@@ -61,7 +61,7 @@ jobs:
     executor: fetch_upload_executor
     steps:
       - attach_workspace:
-          at: ~/
+          at: /home/circleci
 
       - run:
           name: Install Google Cloud SDK
