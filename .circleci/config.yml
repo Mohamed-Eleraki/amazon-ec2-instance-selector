@@ -53,7 +53,7 @@ jobs:
       - persist_to_workspace:
           root: ~/
           paths:
-            - issues.json
+            - project/.circleci/issues.json
 
 
   # Stage 3: Upload issues to Google Cloud Storage
