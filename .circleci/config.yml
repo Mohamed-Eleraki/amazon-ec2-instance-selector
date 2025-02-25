@@ -1,5 +1,21 @@
 version: 2.1
 
+orbs:
+  sonarcloud: sonarsource/sonarcloud@2.0.0
+
+# Define your executors
+executors:
+  docker-executor:
+    docker:
+      - image: cimg/base:current
+    working_directory: ~/repo
+
+  # Executor for the fetch_issues and upload_to_gcs steps
+  fetch_upload_executor:
+    docker:
+      - image: cimg/python:3.9
+    working_directory: ~/repo
+
 jobs:
   build:
     docker:
@@ -11,11 +27,35 @@ jobs:
           command: echo 'Hello SonarQube!'
       - sonarcloud/scan
 
-orbs:
-  sonarcloud: sonarsource/sonarcloud@2.0.0
+  # Stage 2: Fetch issues from SonarCloud and save to file
+  fetch_issues:
+    executor: fetch_upload_executor
+    steps:
+      - run:
+          name: Install dependencies (jq and curl for API)
+          command: |
+            apt-get update && apt-get install -y jq curl
+
+      - run:
+          name: Fetch issues from SonarCloud API
+          command: |
+            curl -u $SONARQUBE_TOKEN: "https://sonarcloud.io/api/issues/search?componentKeys=$PROJECT_KEY&ps=500" \
+            -o issues.json
+
+      - run:
+          name: Display fetched issues
+          command: cat issues.json
+
+      - persist_to_workspace:
+          root: .
+          paths:
+            - issues.json
+
 
 workflows:
   main:
     jobs:
       - build:
+          context: SonarCloud
+      - fetch_issues:
           context: SonarCloud
