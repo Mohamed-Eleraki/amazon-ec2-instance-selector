@@ -63,6 +63,10 @@ jobs:
     steps:
       - attach_workspace:
           at: .
+          
+      - run:
+          name: Display fetched issues
+          command: cat issues.json
 
       - run:
           name: Install Google Cloud SDK
