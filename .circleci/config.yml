@@ -51,7 +51,7 @@ jobs:
           command: cat issues.json
 
       - persist_to_workspace:
-          root: .
+          root: ~/
           paths:
             - issues.json
 
@@ -61,7 +61,7 @@ jobs:
     executor: fetch_upload_executor
     steps:
       - attach_workspace:
-          at: /workspace
+          at: ~/
 
       - run:
           name: Install Google Cloud SDK
@@ -89,7 +89,7 @@ workflows:
     jobs:
       - build:
           context: SonarCloud
-          
+
       - fetch_issues:
           context: SonarCloud
           requires: [build]
