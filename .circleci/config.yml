@@ -34,7 +34,7 @@ jobs:
       - run:
           name: Install dependencies (jq and curl for API)
           command: |
-            apt-get update && apt-get install -y jq curl
+            sudo apt-get update && apt-get install -y jq curl
 
       - run:
           name: Fetch issues from SonarCloud API
@@ -59,3 +59,4 @@ workflows:
           context: SonarCloud
       - fetch_issues:
           context: SonarCloud
+          requires: [build]
