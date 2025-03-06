@@ -38,11 +38,11 @@ jobs:
     docker:
       - image: cimg/base:current
     steps:
-      - sonarcloud/scan
+      - sonarcloud/scan:
           # Using SonarCloud orb for analysis
-          # token: $SONARQUBE_TOKEN
-          # project_key: $PROJECT_KEY
-          # organization: $SONARQUBE_ORG
+          token: $SONARQUBE_TOKEN
+          project_key: $PROJECT_KEY
+          organization: $SONARQUBE_ORG
 
 
 
