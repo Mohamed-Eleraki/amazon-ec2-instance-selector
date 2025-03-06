@@ -35,10 +35,9 @@ jobs:
 
 
   sonar_cloud_scan:
-    steps:
     docker:
       - image: cimg/base:current
-          
+    steps:
       - attach_workspace:
           at: .
 
