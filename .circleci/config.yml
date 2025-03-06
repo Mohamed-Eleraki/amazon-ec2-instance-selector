@@ -39,7 +39,7 @@ jobs:
       - image: cimg/base:current
     steps:
       - checkout
-      - sonarcloud/scan:
+      - sonarcloud/scan
           # Using SonarCloud orb for analysis
           # token: $SONARQUBE_TOKEN
           # project_key: $PROJECT_KEY
