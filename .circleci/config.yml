@@ -17,7 +17,7 @@ executors:
     working_directory: ~/repo
 
 jobs:
-  build:
+  build_dependencies:
     docker:
       - image: cimg/base:current
     steps:
@@ -71,7 +71,7 @@ jobs:
             - issues.json
 
   # Stage 3: Upload issues to Google Cloud Storage
-  upload_to_gcs:
+  upload_to_gcp:
     executor: fetch_upload_executor
     steps:
       - checkout
