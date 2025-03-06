@@ -24,21 +24,27 @@ jobs:
       - checkout
       - run:
           name: Install dependencies and build project
-          command: echo 'Hello SonarQube!'
+          command: |
+            sudo apt-get update && sudo apt-get install -y jq curl build-essential
+            echo 'Hello SonarQube! List down all the required packages here'
+            
       - sonarcloud/scan
           # Using SonarCloud orb for analysis
           # token: $SONARQUBE_TOKEN
           # project_key: $PROJECT_KEY
           # organization: $SONARQUBE_ORG
 
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .  # Persist the entire workspace for reuse
+
   # Stage 2: Fetch issues from SonarCloud and save to file
   fetch_issues:
     executor: fetch_upload_executor
     steps:
-      - run:
-          name: Install dependencies (jq and curl for API)
-          command: |
-            sudo apt-get update && sudo apt-get install -y jq curl
+      - attach_workspace:
+          at: .
 
       - run:
           name: Fetch issues from SonarCloud API
@@ -53,9 +59,7 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            # - /home/circleci/issues.json
             - issues.json
-
 
   # Stage 3: Upload issues to Google Cloud Storage
   upload_to_gcs:
@@ -88,7 +92,6 @@ jobs:
             gsutil cp /workspace/issues.json gs://$GCS_BUCKET_NAME/sonarqube-issues/$(date +'%Y-%m-%d')-issues.json
             echo "Issues file uploaded to GCS"
 
-
 workflows:
   main:
     jobs:
@@ -99,6 +102,119 @@ workflows:
           context: SonarCloud
           requires: [build]
           
-      - upload_to_gcs:
-          context: SonarCloud
-          requires: [fetch_issues]
+      # - upload_to_gcs:
+      #     context: SonarCloud
+      #     requires: [fetch_issues]
+
+
+
+
+
+
+
+##############################################################################################
+# version: 2.1
+
+# orbs:
+#   sonarcloud: sonarsource/sonarcloud@2.0.0
+
+# # Define your executors
+# executors:
+#   docker-executor:
+#     docker:
+#       - image: cimg/base:current
+#     working_directory: ~/repo
+
+#   # Executor for the fetch_issues and upload_to_gcs steps
+#   fetch_upload_executor:
+#     docker:
+#       - image: cimg/python:3.9
+#     working_directory: ~/repo
+
+# jobs:
+#   build:
+#     docker:
+#       - image: cimg/base:current
+#     steps:
+#       - checkout
+#       - run:
+#           name: Install dependencies and build project
+#           command: echo 'Hello SonarQube! list down all the requires pacakges here'
+
+#       - sonarcloud/scan
+#           # Using SonarCloud orb for analysis
+#           # token: $SONARQUBE_TOKEN
+#           # project_key: $PROJECT_KEY
+#           # organization: $SONARQUBE_ORG
+
+#   # Stage 2: Fetch issues from SonarCloud and save to file
+#   fetch_issues:
+#     executor: fetch_upload_executor
+#     steps:
+#       - run:
+#           name: Install dependencies (jq and curl for API)
+#           command: |
+#             sudo apt-get update && sudo apt-get install -y jq curl
+
+#       - run:
+#           name: Fetch issues from SonarCloud API
+#           command: |
+#             curl -u $SONARQUBE_TOKEN: "https://sonarcloud.io/api/issues/search?componentKeys=$PROJECT_KEY&ps=500" \
+#             -o issues.json
+
+#       - run:
+#           name: Display fetched issues
+#           command: cat issues.json
+
+#       - persist_to_workspace:
+#           root: .
+#           paths:
+#             # - /home/circleci/issues.json
+#             - issues.json
+
+
+#   # Stage 3: Upload issues to Google Cloud Storage
+#   upload_to_gcs:
+#     executor: fetch_upload_executor
+#     steps:
+#       - attach_workspace:
+#           at: .
+          
+#       - run:
+#           name: Display fetched issues
+#           command: cat issues.json
+
+#       - run:
+#           name: Install Google Cloud SDK
+#           command: |
+#             curl -sSL https://sdk.cloud.google.com | bash
+#             source $HOME/google-cloud-sdk/path.bash.inc
+#             gcloud components install gsutil
+
+#       - run:
+#           name: Authenticate with Google Cloud
+#           command: |
+#             echo $GCP_SERVICE_ACCOUNT_KEY | base64 --decode > /tmp/gcloud-service-key.json
+#             gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
+#             gcloud config set project $GCP_PROJECT_ID
+
+#       - run:
+#           name: Upload issues file to GCS
+#           command: |
+#             gsutil cp /workspace/issues.json gs://$GCS_BUCKET_NAME/sonarqube-issues/$(date +'%Y-%m-%d')-issues.json
+#             echo "Issues file uploaded to GCS"
+
+
+# workflows:
+#   main:
+#     jobs:
+#       - build:
+#           context: SonarCloud
+
+#       - fetch_issues:
+#           context: SonarCloud
+#           requires: [build]
+          
+#       - upload_to_gcs:
+#           context: SonarCloud
+#           requires: [fetch_issues]
