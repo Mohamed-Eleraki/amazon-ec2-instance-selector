@@ -51,6 +51,7 @@ jobs:
   fetch_scanning_result:
     executor: fetch_upload_executor
     steps:
+      - checkout
       - attach_workspace:
           at: .
 
@@ -73,6 +74,7 @@ jobs:
   upload_to_gcs:
     executor: fetch_upload_executor
     steps:
+      - checkout
       - attach_workspace:
           at: .
           
