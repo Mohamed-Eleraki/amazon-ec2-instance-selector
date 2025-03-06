@@ -117,7 +117,7 @@ workflows:
 
       - fetch_scanning_result:
           context: SonarCloud
-          requires: [build, sonar_cloud_scan]
+          requires: [build_dependencies, sonar_cloud_scan]
 
       - upload_to_gcp:
           context: SonarCloud
