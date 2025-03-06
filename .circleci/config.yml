@@ -38,9 +38,6 @@ jobs:
     docker:
       - image: cimg/base:current
     steps:
-      - attach_workspace:
-          at: .
-
       - sonarcloud/scan
           # Using SonarCloud orb for analysis
           # token: $SONARQUBE_TOKEN
