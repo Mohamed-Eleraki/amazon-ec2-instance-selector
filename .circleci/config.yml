@@ -27,20 +27,28 @@ jobs:
           command: |
             sudo apt-get update && sudo apt-get install -y jq curl build-essential
             echo 'Hello SonarQube! List down all the required packages here'
-            
-      - sonarcloud/scan
-          # Using SonarCloud orb for analysis
-          # token: $SONARQUBE_TOKEN
-          # project_key: $PROJECT_KEY
-          # organization: $SONARQUBE_ORG
 
       - persist_to_workspace:
           root: .
           paths:
             - .  # Persist the entire workspace for reuse
 
+
+  sonar_cloud_scan:
+    steps:
+      - attach_workspace:
+          at: .
+
+      - sonarcloud/scan
+          # Using SonarCloud orb for analysis
+          # token: $SONARQUBE_TOKEN
+          # project_key: $PROJECT_KEY
+          # organization: $SONARQUBE_ORG
+
+
+
   # Stage 2: Fetch issues from SonarCloud and save to file
-  fetch_issues:
+  fetch_scanning_result:
     executor: fetch_upload_executor
     steps:
       - attach_workspace:
@@ -75,22 +83,26 @@ jobs:
       - run:
           name: Install Google Cloud SDK
           command: |
-            curl -sSL https://sdk.cloud.google.com | bash
-            source $HOME/google-cloud-sdk/path.bash.inc
-            gcloud components install gsutil
+            echo "Instal gsutil......"
+            # curl -sSL https://sdk.cloud.google.com | bash
+            # source $HOME/google-cloud-sdk/path.bash.inc
+            # gcloud components install gsutil
 
       - run:
           name: Authenticate with Google Cloud
           command: |
-            echo $GCP_SERVICE_ACCOUNT_KEY | base64 --decode > /tmp/gcloud-service-key.json
-            gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
-            gcloud config set project $GCP_PROJECT_ID
+            echo "Authenticate with google cloud"
+            # echo $GCP_SERVICE_ACCOUNT_KEY | base64 --decode > /tmp/gcloud-service-key.json
+            # gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
+            # gcloud config set project $GCP_PROJECT_ID
 
       - run:
           name: Upload issues file to GCS
           command: |
-            gsutil cp /workspace/issues.json gs://$GCS_BUCKET_NAME/sonarqube-issues/$(date +'%Y-%m-%d')-issues.json
-            echo "Issues file uploaded to GCS"
+            echo "Upload issues file to GCS"
+            # gsutil cp /workspace/issues.json gs://$GCS_BUCKET_NAME/sonarqube-issues/$(date +'%Y-%m-%d')-issues.json
+            # echo "Issues file uploaded to GCS"
+
 
 workflows:
   main:
@@ -98,13 +110,16 @@ workflows:
       - build:
           context: SonarCloud
 
-      - fetch_issues:
+      - sonar_cloud_scan:
           context: SonarCloud
-          requires: [build]
-          
-      # - upload_to_gcs:
-      #     context: SonarCloud
-      #     requires: [fetch_issues]
+
+      - fetch_scanning_result:
+          context: SonarCloud
+          requires: [build, sonar_cloud_scan]
+
+      - upload_to_gcs:
+          context: SonarCloud
+          requires: [fetch_scanning_result]
 
 
 
