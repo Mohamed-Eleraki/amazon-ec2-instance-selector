@@ -81,7 +81,11 @@ jobs:
 
   # Stage 3: Trigger ai endpoint
   trigger_ai_endpoint:
-    executor: fetch_upload_executor
+    # executor: fetch_upload_executor
+    docker:
+      - image: circleci/python:3.8  # Use Python 3.8
+    working_directory: ~/workspace
+
     steps:
       - checkout
       - attach_workspace:
@@ -95,14 +99,14 @@ jobs:
             # echo $GOOGLE_APPLICATION_CREDENTIALS > $HOME/credentials.json
             # gcloud auth activate-service-account --key-file=$HOME/credentials.json
 
-      - run:
-          name: Install google api SDK
-          command: |
-            sudo apt install python3.10-venv
-            python -m venv venv
-            . venv/bin/activate
-            pip install --upgrade pip
-            pip install google-cloud-aiplatform  # Install the required Google Cloud package
+      # - run:
+      #     name: Install google api SDK
+      #     command: |
+      #       sudo apt install python3.10-venv
+      #       python -m venv venv
+      #       . venv/bin/activate
+      #       pip install --upgrade pip
+      #       pip install google-cloud-aiplatform  # Install the required Google Cloud package
             
       - run:
           name: Run the Python script
