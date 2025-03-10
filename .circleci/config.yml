@@ -94,12 +94,16 @@ jobs:
             echo set up Google Cloud credentials
             # echo $GOOGLE_APPLICATION_CREDENTIALS > $HOME/credentials.json
             # gcloud auth activate-service-account --key-file=$HOME/credentials.json
-      - run:
-          name: print current working dir
-          command: |
-            pwd
-            ls -lathr
 
+      - run:
+          name: Install google api SDK
+          command: |
+            sudo apt install python3.10-venv
+            python -m venv venv
+            . venv/bin/activate
+            pip install --upgrade pip
+            pip install google-cloud-aiplatform  # Install the required Google Cloud package
+            
       - run:
           name: Run the Python script
           command: |
