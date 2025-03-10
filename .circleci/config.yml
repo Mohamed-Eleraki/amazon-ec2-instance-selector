@@ -114,10 +114,10 @@ jobs:
             . venv/bin/activate
             python trigger_ai_endpoint.py
 
-      - persist_to_workspace:
-          root: .
-          paths:
-            - prediction_results.json
+      # - persist_to_workspace:
+      #     root: .
+      #     paths:
+      #       - prediction_results.json
 
 
   # Stage 4: Upload issues to Google Cloud Storage
