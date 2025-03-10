@@ -94,6 +94,11 @@ jobs:
             echo set up Google Cloud credentials
             # echo $GOOGLE_APPLICATION_CREDENTIALS > $HOME/credentials.json
             # gcloud auth activate-service-account --key-file=$HOME/credentials.json
+      - run:
+          name: print current working dir
+          command: |
+            pwd
+            ls -lathr
 
       - run:
           name: Run the Python script
@@ -165,9 +170,9 @@ workflows:
           context: SonarCloud
           requires: [fetch_scanning_result]
 
-      - upload_to_gcp:
-          context: SonarCloud
-          requires: [trigger_ai_endpoint]
+      # - upload_to_gcp:
+      #     context: SonarCloud
+      #     requires: [trigger_ai_endpoint]
 
 
 
