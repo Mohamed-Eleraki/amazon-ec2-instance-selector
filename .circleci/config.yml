@@ -80,7 +80,7 @@ jobs:
             - issues.json
 
   # Stage 3: Trigger ai endpoint
-  trigger_ai_endpoint:
+  trigger_backend_api:
     # executor: fetch_upload_executor
     docker:
       - image: circleci/python:3.8  # Use Python 3.8
@@ -174,7 +174,7 @@ workflows:
           context: SonarCloud
           requires: [Install_dependencies, sonar_cloud_scan]
 
-      - trigger_ai_endpoint:
+      - trigger_backend_api:
           context: SonarCloud
           requires: [fetch_scanning_result]
 
