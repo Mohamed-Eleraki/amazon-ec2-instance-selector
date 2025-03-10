@@ -17,16 +17,24 @@ executors:
     working_directory: ~/repo
 
 jobs:
-  build_dependencies:
+  Install_dependencies:
     docker:
       - image: cimg/base:current
     steps:
       - checkout
       - run:
-          name: Install dependencies and build project
+          name: Install/Update required Linux packages
           command: |
             sudo apt-get update && sudo apt-get install -y jq curl build-essential
             echo 'Hello SonarQube! List down all the required packages here'
+
+      - run:
+          name: Install google api SDK
+          command: |
+            python -m venv venv
+            . venv/bin/activate
+            pip install --upgrade pip
+            pip install google-cloud-aiplatform  # Install the required Google Cloud package
 
       - persist_to_workspace:
           root: .
@@ -70,17 +78,50 @@ jobs:
           paths:
             - issues.json
 
-  # Stage 3: Upload issues to Google Cloud Storage
+  # Stage 3: Trigger ai endpoint
+  trigger_ai_endpoint:
+    executor: fetch_upload_executor
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+
+      - run:
+          name: Set up Google Cloud credentials
+          command: |
+            # Using Google Cloud service account key JSON file as env var
+            echo set up Google Cloud credentials
+            # echo $GOOGLE_APPLICATION_CREDENTIALS > $HOME/credentials.json
+            # gcloud auth activate-service-account --key-file=$HOME/credentials.json
+
+      - run:
+          name: Run the Python script
+          command: |
+            . venv/bin/activate
+            python trigger_ai_endpoint.py
+
+      - persist_to_workspace:
+          root: .
+          paths:
+            - prediction_results.json
+
+
+  # Stage 4: Upload issues to Google Cloud Storage
   upload_to_gcp:
     executor: fetch_upload_executor
     steps:
       - checkout
       - attach_workspace:
           at: .
-          
+
       - run:
-          name: Display fetched issues
-          command: cat issues.json
+          name: Display fetched prediction results
+          command: |
+            cat prediction_results.json
+
+      # - run:
+      #     name: Display fetched issues
+      #     command: cat issues.json
 
       - run:
           name: Install Google Cloud SDK
@@ -101,15 +142,15 @@ jobs:
       - run:
           name: Upload issues file to GCS
           command: |
-            echo "Upload issues file to GCS"
-            # gsutil cp /workspace/issues.json gs://$GCS_BUCKET_NAME/sonarqube-issues/$(date +'%Y-%m-%d')-issues.json
-            # echo "Issues file uploaded to GCS"
+            echo "Upload result file to GCP"
+            # gsutil cp /workspace/prediction_results.json gs://$GCS_BUCKET_NAME/sonarqube-issues/$(date +'%Y-%m-%d')-prediction_results.json
+            # echo "prediction_results file uploaded to GCP"
 
 
 workflows:
   main:
     jobs:
-      - build_dependencies:
+      - Install_dependencies:
           context: SonarCloud
 
       - sonar_cloud_scan:
@@ -119,9 +160,13 @@ workflows:
           context: SonarCloud
           requires: [build_dependencies, sonar_cloud_scan]
 
-      - upload_to_gcp:
+      - trigger_ai_endpoint:
           context: SonarCloud
           requires: [fetch_scanning_result]
+
+      - upload_to_gcp:
+          context: SonarCloud
+          requires: [trigger_ai_endpoint]
 
 
 
