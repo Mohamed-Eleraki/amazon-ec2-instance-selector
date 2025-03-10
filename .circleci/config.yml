@@ -158,7 +158,7 @@ workflows:
 
       - fetch_scanning_result:
           context: SonarCloud
-          requires: [build_dependencies, sonar_cloud_scan]
+          requires: [Install_dependencies, sonar_cloud_scan]
 
       - trigger_ai_endpoint:
           context: SonarCloud
